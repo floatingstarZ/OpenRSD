@@ -6,7 +6,7 @@ Welcome to the official repository of [MutDet](https://openaccess.thecvf.com/con
 In this work, we propose an open-prompt remote sensing object detection method, which supports multimodal prompts and integrates multi-task detection heads to balance accuracy and real-time requirement single-stage or two-stage detectors.
 Our paper is accepted by ICCV 2025. 
 
-![diagram](./src/images/Fig2_Method.pdf)
+![diagram](./src/images/Fig2_Method_01.png)
 
 
 
