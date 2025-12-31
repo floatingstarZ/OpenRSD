@@ -98,9 +98,9 @@ python setup.py develop
 
 所有数据集可通过以下链接下载：
 
-**百度网盘**：
-- 链接: https://pan.baidu.com/s/1c-EbjmQApNC8RBxeHlmHMQ?pwd=sxdc 
-- 提取码: `sxdc`
+通过网盘分享的文件：OpenRSD
+链接: https://pan.baidu.com/s/1QWWZOfrjAWhEbk1eQASXVQ?pwd=usnc 提取码: usnc 
+--来自百度网盘超级会员v9的分享
 
 ### 数据集组织
 
