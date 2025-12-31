@@ -239,19 +239,19 @@ class ToolFeatExtractor(nn.Module):
                 return
 
             ######## --- 图像熵筛选
-            device = rois.device
-            entropy_img_patches = self.crop_ent(batch_inputs, rois)
-            entropy_img_patches = auto_denorm_multi(to_array(entropy_img_patches))
-            entropy_img_patches = torch.tensor(entropy_img_patches).to(device)
-            img_quality = entropy_forward(entropy_img_patches, batch_size=64)
-            img_quality = img_quality.to(device)
-            valid_ids = img_quality >= self.entropy_thr
-            # print('img_quality', torch.sum(img_quality < self.entropy_thr))
-            img_quality = img_quality[valid_ids]
-            rois = rois[valid_ids]
-            global_idx = global_idx[valid_ids]
-            if torch.sum(valid_ids) == 0:
-                return
+            # device = rois.device
+            # entropy_img_patches = self.crop_ent(batch_inputs, rois)
+            # entropy_img_patches = auto_denorm_multi(to_array(entropy_img_patches))
+            # entropy_img_patches = torch.tensor(entropy_img_patches).to(device)
+            # img_quality = entropy_forward(entropy_img_patches, batch_size=64)
+            # img_quality = img_quality.to(device)
+            # valid_ids = img_quality >= self.entropy_thr
+            # # print('img_quality', torch.sum(img_quality < self.entropy_thr))
+            # img_quality = img_quality[valid_ids]
+            # rois = rois[valid_ids]
+            # global_idx = global_idx[valid_ids]
+            # if torch.sum(valid_ids) == 0:
+            #     return
         img_patches = self.crop(batch_inputs, rois)
         patch_feats = model_forward(self.backbone, img_patches, batch_size=128)
 
@@ -268,13 +268,12 @@ class ToolFeatExtractor(nn.Module):
 
 from ctlib.rbox import *
 
-data_root = '/data/space2/huangziyue/DIOR_R_dota/train_val'
+data_root = './DIOR_R_dota/train_val'
 out_dir = f'{data_root}/Step4_Extract_DINOv2_Embeds_8_3'
 model = ToolFeatExtractor(out_dir=out_dir,roi_scale_factor=1.25)
 model.cuda().eval()
 img_dir = f'{data_root}/images'
-ann_dir = f'{data_root}/GT_with_SAM_labelTxt_5_23_IOU_01'
-file_list = sorted(os.listdir(ann_dir))
+ann_dir = f'{data_root}/annfiles'
 ########
 
 
@@ -286,7 +285,7 @@ transform = transforms.Compose(
         ),
     ]
 )
-for ann_file in tqdm(file_list):
+for ann_file in tqdm(sorted(os.listdir(ann_dir))):
     img_name = Path(ann_file).stem
     img_pth = f'{img_dir}/{img_name}.png'
 
