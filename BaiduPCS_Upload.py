@@ -2,7 +2,6 @@ import os
 import zipfile
 import tempfile
 import shutil
-import subprocess
 from pathlib import Path
 from collections import Counter
 
@@ -23,6 +22,8 @@ def upload_with_baidupcs_go(local_path, remote_path):
         local_path: 本地文件/文件夹路径（绝对路径）
         remote_path: 远程路径（例如：/OpenRSD/data/xxx）
     """
+    if not remote_path.startswith("/"):
+        remote_path = "/" + remote_path
     # 确保本地路径是绝对路径
     local_abs = os.path.abspath(local_path)
 
@@ -31,33 +32,19 @@ def upload_with_baidupcs_go(local_path, remote_path):
     if not os.path.isdir(local_abs):
         # 如果是文件，remote只保留父目录
         remote_path = os.path.dirname(remote_path)
-        
-        
-    cmd = [
-        BAIDUPCS_GO_PATH,
-        "upload",
-        local_abs,
-        remote_path,
-        "--policy",
-        UPLOAD_POLICY
-    ]
 
-    print(f"  执行命令: {' '.join(cmd)}")
-    try:
-        result = subprocess.run(
-            cmd,
-            check=True,
-            capture_output=True,
-            text=True
-        )
+    # 构建命令字符串
+    cmd_str = f'"{BAIDUPCS_GO_PATH}" upload "{local_abs}" "{remote_path}" --policy {UPLOAD_POLICY}'
+
+    print(f"  执行命令: {cmd_str}")
+    exit_code = os.system(cmd_str)
+    if exit_code == 0:
         print(f"  上传成功: {local_abs} -> {remote_path}")
-        if result.stdout:
-            print(f"  输出: {result.stdout}")
         return True
-    except subprocess.CalledProcessError as e:
-        print(f"  上传失败: {local_abs} -> {remote_path}")
-        print(f"  错误: {e.stderr}")
+    else:
+        print(f"  上传失败: {local_abs} -> {remote_path} (退出码: {exit_code})")
         return False
+
 
 # ============================================================
 # 压缩文件夹函数
@@ -322,9 +309,9 @@ for idx, (local, remote) in enumerate(exist):
 
         print(f"Uploading (folder): {local} -> {remote_zip}")
         # 1. 压缩
-        zip_directory(local, zip_path)
+        if not os.path.exists(zip_path):
+            zip_directory(local, zip_path)
         # 2. 上传
-        print(f'bp.upload({zip_path}, {remote_zip}, ondup=skip')
         upload_with_baidupcs_go(zip_path, remote_zip)
         # 3. 立即清理
         if os.path.exists(zip_path):
