@@ -143,27 +143,27 @@ dataset_anns = [
     './data/HRSC2016_DOTA/train/Step6_Format_labels',  # D7_HRSC2016
     './data/GLH-Bridge_1024_200/train/Step6_Format_labels',  # D8_GLH_Bridge
     ######## Finetuning
-    f'./data/Formatted_FederatedLabels/Data1_DOTA2',  # Data1_DOTA2
-    f'./data/Formatted_FederatedLabels/Data2_DIOR_R',  # Data2_DIOR_R
-    f'./data/Formatted_FederatedLabels/Data3_FAIR1M',  # Data3_FAIR1M
-    f'./data/Formatted_FederatedLabels/Data5_SpaceNet',  # Data5_SpaceNet
-    f'./data/Formatted_FederatedLabels/Data6_Xview',  # Data6_Xview
-    f'./data/Formatted_FederatedLabels/Data7_HRSC2016',  # Data7_HRSC2016
-    f'./data/Formatted_FederatedLabels/Data8_GLH_Bridge',  # Data8_GLH_Bridge
-    f'./data/Formatted_FederatedLabels/Data9_FMoW',  # Data9_FMoW
-    f'./data/Formatted_FederatedLabels/Data11_WHU_Mix',  # Data11_WHU_Mix
-    f'./data/Formatted_FederatedLabels/Data12_ShipImageNet',  # Data12_ShipImageNet
+    './data/Formatted_FederatedLabels/Data1_DOTA2',  # Data1_DOTA2
+    './data/Formatted_FederatedLabels/Data2_DIOR_R',  # Data2_DIOR_R
+    './data/Formatted_FederatedLabels/Data3_FAIR1M',  # Data3_FAIR1M
+    './data/Formatted_FederatedLabels/Data5_SpaceNet',  # Data5_SpaceNet
+    './data/Formatted_FederatedLabels/Data6_Xview',  # Data6_Xview
+    './data/Formatted_FederatedLabels/Data7_HRSC2016',  # Data7_HRSC2016
+    './data/Formatted_FederatedLabels/Data8_GLH_Bridge',  # Data8_GLH_Bridge
+    './data/Formatted_FederatedLabels/Data9_FMoW',  # Data9_FMoW
+    './data/Formatted_FederatedLabels/Data11_WHU_Mix',  # Data11_WHU_Mix
+    './data/Formatted_FederatedLabels/Data12_ShipImageNet',  # Data12_ShipImageNet
     ######## SelfTraining
-    f'./data/Formatted_SelfLabels_Ver5/Data1_DOTA2',  # Data1_DOTA2
-    f'./data/Formatted_SelfLabels_Ver5/Data2_DIOR_R',  # Data2_DIOR_R
-    f'./data/Formatted_SelfLabels_Ver5/Data3_FAIR1M',  # Data3_FAIR1M
-    f'./data/Formatted_SelfLabels_Ver5/Data5_SpaceNet',  # Data5_SpaceNet
-    f'./data/Formatted_SelfLabels_Ver5/Data6_Xview',  # Data6_Xview
-    f'./data/Formatted_SelfLabels_Ver5/Data7_HRSC2016',  # Data7_HRSC2016
-    f'./data/Formatted_SelfLabels_Ver5/Data8_GLH_Bridge',  # Data8_GLH_Bridge
-    f'./data/Formatted_SelfLabels_Ver5/Data9_FMoW',  # Data9_FMoW
-    f'./data/Formatted_SelfLabels_Ver5/Data11_WHU_Mix',  # Data11_WHU_Mix
-    f'./data/Formatted_SelfLabels_Ver5/Data12_ShipImageNet',  # Data12_ShipImageNet
+    './data/Formatted_SelfLabels_Ver5/Data1_DOTA2',  # Data1_DOTA2
+    './data/Formatted_SelfLabels_Ver5/Data2_DIOR_R',  # Data2_DIOR_R
+    './data/Formatted_SelfLabels_Ver5/Data3_FAIR1M',  # Data3_FAIR1M
+    './data/Formatted_SelfLabels_Ver5/Data5_SpaceNet',  # Data5_SpaceNet
+    './data/Formatted_SelfLabels_Ver5/Data6_Xview',  # Data6_Xview
+    './data/Formatted_SelfLabels_Ver5/Data7_HRSC2016',  # Data7_HRSC2016
+    './data/Formatted_SelfLabels_Ver5/Data8_GLH_Bridge',  # Data8_GLH_Bridge
+    './data/Formatted_SelfLabels_Ver5/Data9_FMoW',  # Data9_FMoW
+    './data/Formatted_SelfLabels_Ver5/Data11_WHU_Mix',  # Data11_WHU_Mix
+    './data/Formatted_SelfLabels_Ver5/Data12_ShipImageNet',  # Data12_ShipImageNet
     ######## Validation
     './data/DOTA2_1024_500/ss_val/annfiles',  # Data1_DOTA2
     './data/DOTA_800_600/val/labelTxt',  # Data1_DOTA1

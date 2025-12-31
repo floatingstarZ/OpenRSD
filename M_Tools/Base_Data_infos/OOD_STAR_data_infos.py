@@ -1,0 +1,22 @@
+data_infos = dict(
+    Data28_STAR=dict(
+        data_root='./data/STAR_800_200',
+        train_img_dir=None,
+        train_ann_dir='None',
+        val_img_dir='val/images',
+        val_ann_dir='val/annfiles',
+        class_names=['airplane', 'apron', 'arch_dam',
+                     'basketball_court', 'boarding_bridge', 'boat', 'breakwater',
+                     'bridge', 'car', 'car_parking', 'cement_concrete_pavement',
+                     'chimney', 'coal_yard', 'containment_vessel', 'cooling_tower',
+           'crane', 'dock', 'engineering_vehicle', 'flood_dam', 'foundation_pit',
+           'gas_station', 'genset', 'goods_yard', 'gravity_dam', 'ground_track_field',
+           'intersection', 'lattice_tower', 'roundabout', 'runway', 'ship',
+           'smoke', 'soccer_ball_field', 'storehouse', 'substation', 'tank',
+           'taxiway', 'tennis_court', 'terminal', 'toll_gate', 'tower_crane',
+           'truck', 'truck_parking', 'unfinished_building', 'vapor', 'wind_mill'],
+        img_scale=(1024, 1024),
+        val_dataset_flag='Data28_STAR',
+        support_data='./data/STAR_800_200/val/Step5_3_Prepare_Visual_Text_DINOv2_support.pkl',
+    ),
+)

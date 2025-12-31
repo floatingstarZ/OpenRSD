@@ -198,58 +198,6 @@ if __name__ == '__main__':
     from M_Tools.Base_Data_infos.data_infos import data_infos
     from ctlib.os import *
     os.chdir('/opt/data/nfs/huangziyue/Projects/MMRotate_AD')
-    """
-        model_info = dict(
-                val_using_aux=False,
-                cfg_pth='A12_SelfTrain/A12_flex_rtm_v3_1_maid_self_training.py',
-                cfg_name='A12_flex_rtm_v3_1_maid_self_training',
-            )
-        model_info = dict(
-            val_using_aux=False,
-            cfg_pth='A10_Large_Pretrain_Stage3/A10_flex_rtm_v3_1_formal_ablation_wo_pretrain.py',
-            cfg_name='A10_flex_rtm_v3_1_formal_ablation_wo_pretrain',
-        )
-        model_info = dict(
-            val_using_aux=False,
-            cfg_pth='A10_Large_Pretrain_Stage3/A10_flex_rtm_v3_1_formal_ablation_only_align.py',
-            cfg_name='A10_flex_rtm_v3_1_formal_ablation_only_align',
-        )
-        model_info = dict(
-            val_using_aux=False,
-            cfg_pth='A12_SelfTrain/A12_flex_rtm_v3_1_self_training_unfz.py',
-            cfg_name='A12_flex_rtm_v3_1_self_training_unfz',
-        )
-        model_info = dict(
-            val_using_aux=False,
-            cfg_pth='A15_Long_Contrastive/A15_Gen_rtm_v5_long_ct.py',
-            cfg_name='A15_Gen_rtm_v5_long_ct',
-        )
-        model_info = dict(
-            val_using_aux=False,
-            cfg_pth='A10_Large_Pretrain_Stage3/A10_flex_rtm_v3_1_formal_ablation_balance.py',
-            cfg_name='A10_flex_rtm_v3_1_formal_ablation_balance',
-        )
-         model_info = dict(
-            val_using_aux=False,
-            cfg_pth='A10_Large_Pretrain_Stage3/A10_flex_rtm_v3_1_formal.py',
-            cfg_name='A10_flex_rtm_v3_1_formal',
-        )
-         model_info = dict(
-        val_using_aux=False,
-        cfg_pth='A10_Large_Pretrain_Stage3/A10_flex_rtm_v3_1_formal_ablation_balance.py',
-        cfg_name='A10_flex_rtm_v3_1_formal_ablation_balance',
-        
-            model_info = dict(
-        val_using_aux=False,
-        cfg_pth='A12_SelfTrain/A12_flex_rtm_v3_1_self_training_mix_unfz.py',
-        cfg_name='A12_flex_rtm_v3_1_self_training_mix_unfz',
-    )
-        model_info = dict(
-        val_using_aux=False,
-        cfg_pth='A12_SelfTrain/A12_flex_rtm_v3_1_self_training_Labelver5.py',
-        cfg_name='AD_A08_e_rtm_v2_base_recheck',
-    )
-    """
     # val_using_aux = False
     # prefix = '10_28_A10_Gen_rtm_v3_0_pretrain'
     # cfg_name = 'A10_Gen_rtm_v3_0_pretrain'
@@ -257,8 +205,8 @@ if __name__ == '__main__':
     # MMR_AD_A10_flex_rtm_v3_1_formal_simple
     model_info = dict(
         val_using_aux=True, # False,
-        cfg_pth='A10_Large_Pretrain_Stage3/A10_flex_rtm_v3_1_formal_simple.py',
-        cfg_name='A10_flex_rtm_v3_1_formal_simple',
+        cfg_pth='Step2_A10_Large_Pretrain_Stage3/A10_flex_rtm_v3_1_formal.py',
+        cfg_name='A10_flex_rtm_v3_1_formal',
     )
     cfg_name = model_info['cfg_name']
     cfg_pth = model_info['cfg_pth']

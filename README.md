@@ -16,9 +16,7 @@
 ### 主要特性
 
 - 🎯 **多模态提示支持**：支持文本、图像等多种模态的提示输入
-- 🔄 **多任务检测头**：集成多任务检测头以平衡精度和实时性
-- 🚀 **灵活架构**：兼容单阶段和两阶段检测器
-- 📊 **高性能**：在多个遥感数据集上取得优异性能
+- 🔄 **多种检测头**：支持对齐检测头（实时性高，支持大词汇表）和融合检测头（精度高）
 
 ## 🎨 方法概述
 
@@ -29,7 +27,7 @@
 
 <div align="center">
   <img src="./src/images/Fig3_Training_Pipeline_01.png" width="800"/>
-  <p><b>图 2: 训练流程</b></p>
+  <p><b>图 2: 多阶段训练流程</b></p>
 </div>
 
 ## 📋 目录
@@ -60,15 +58,17 @@
 ### 1. 克隆仓库
 
 ```bash
-git clone <repository-url>
-cd MMRotate_AD_Pub
+git clone https://github.com/floatingstarZ/OpenRSD.git
+cd OpenRSD
 ```
 
 ### 2. 创建 conda 环境（推荐）
 
 ```bash
+# 只创建环境
 conda create -n openrsd python=3.8 -y
-conda activate openrsd
+# 或者你可以使用environment.yml来同时安装所有依赖（CUDA 10.2环境）
+conda env create -f environment.yml
 ```
 
 ### 3. 安装 PyTorch
@@ -76,6 +76,7 @@ conda activate openrsd
 根据您的 CUDA 版本安装对应的 PyTorch：
 
 ```bash
+conda activate openrsd
 # 例如 CUDA 11.1
 conda install pytorch torchvision torchaudio cudatoolkit=11.1 -c pytorch
 ```
@@ -83,13 +84,11 @@ conda install pytorch torchvision torchaudio cudatoolkit=11.1 -c pytorch
 ### 4. 安装依赖
 
 ```bash
-# 安装 mmcv-full
-pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/{cu_version}/{torch_version}/index.html
-
 # 安装项目
 pip install -v -e .
 # 或者
 python setup.py develop
+
 ```
 
 ## 📦 数据集准备
@@ -102,30 +101,19 @@ python setup.py develop
 链接: https://pan.baidu.com/s/1QWWZOfrjAWhEbk1eQASXVQ?pwd=usnc 提取码: usnc 
 --来自百度网盘超级会员v9的分享
 
+
 ### 数据集组织
+数据集中图像、标注的文件夹都经过了压缩。
+`./BaiduPCS_Upload.py` 为该项目使用的批量上传脚本，其基本原理为：压缩 -> 上传，并保留了原始目录结构。
+你可以参考改脚本写一个批量解压脚本，数据集路径为 `./data` 。
 
-下载后，请按照以下结构组织数据集：
-
-```
-data/
-├── DIOR/
-│   ├── annotations/
-│   ├── images/
-│   └── ...
-├── DOTA/
-│   ├── annotations/
-│   ├── images/
-│   └── ...
-└── ...
-```
-
-具体的数据集准备步骤请参考各数据集的 README 文件（位于 `tools/data/` 目录下）。
+本项目中使用的数据集均从网络下载原始遥感数据，并经过切片处理获得。具体的数据处理流程和脚本可参考 `tools/data/` 目录。
 
 ## 🚀 快速开始
 
 ### 训练
 
-#### 单 GPU 训练
+#### 单 GPU 训练测试
 
 ```bash
 python tools/train.py ${CONFIG_FILE} [optional arguments]
@@ -133,19 +121,43 @@ python tools/train.py ${CONFIG_FILE} [optional arguments]
 
 #### 多 GPU 训练
 
-```bash
-bash tools/dist_train.sh ${CONFIG_FILE} ${GPU_NUM} [optional arguments]
-```
-
-#### 示例
+使用智能多 GPU 训练调度脚本，可自动检测可用 GPU 并智能分配资源：
 
 ```bash
-# 单 GPU 训练
-python tools/train.py M_configs/Step1_A08_Large_Pretrain/A08_e_rtm_v2_base.py
-
-# 多 GPU 训练（例如 8 个 GPU）
-bash tools/dist_train.sh M_configs/Step1_A08_Large_Pretrain/A08_e_rtm_v2_base.py 8
+cd EXP_CONFIG
+python multi_train_any_gpu.py -k XXX -c 90
 ```
+
+**参数说明：**
+
+- `-k`: 关键词筛选，可指定一个或多个关键词来筛选需要训练的配置（例如：`-k A08 A10` 表示只训练配置名包含 A08 或 A10 的模型）
+- `-c`: 起始命令计数，用于设置端口号起始值（默认 10，端口号 = 29500 + 计数）
+- `-d`: 指定允许使用的 GPU ID，用逗号分隔（例如：`-d 0,1,2,3` 表示只使用 GPU 0-3，默认使用所有可用 GPU）
+- `-r`: 设置 runner 类型（可选值：`det`/`cls`/`few`/`resume`，默认为 `det`）
+
+**功能特性：**
+
+- ✅ 自动检测 GPU 内存使用情况，智能分配可用 GPU
+- ✅ 自动跳过已训练完成的模型（检查 checkpoint 文件是否存在）
+- ✅ 支持多任务并行训练，自动管理 GPU 资源避免冲突
+- ✅ 支持批量训练多个配置，无需手动管理
+
+**使用示例：**
+
+```bash
+# 训练所有包含 "A08" 关键词的配置
+python multi_train_any_gpu.py -k A08 -c 10
+
+# 训练多个关键词的配置（A08 或 A10）
+python multi_train_any_gpu.py -k A08 A10 -c 10
+
+# 只使用 GPU 0-3 进行训练
+python multi_train_any_gpu.py -k A08 -c 10 -d 0,1,2,3
+
+# 继续进行训练
+python multi_train_any_gpu.py -k A08 -c 10 -r resume
+```
+
 
 ### 测试
 
@@ -155,21 +167,49 @@ bash tools/dist_train.sh M_configs/Step1_A08_Large_Pretrain/A08_e_rtm_v2_base.py
 python tools/test.py ${CONFIG_FILE} ${CHECKPOINT_FILE} [optional arguments]
 ```
 
-#### 多 GPU 测试
+#### 批量测试
 
+使用批量评估脚本，可自动在多个数据集上评估不同 epoch 的模型。
+你可以修改Line 206的model_info配置评估不同的模型，其中，val_using_aux=True为使用融合头，=False为使用对齐头。
 ```bash
-bash tools/dist_test.sh ${CONFIG_FILE} ${CHECKPOINT_FILE} ${GPU_NUM} [optional arguments]
+cd ./M_Tools/Eval_Tools
+python eval_diff_epochs.py -d 0 -e 24
 ```
 
-#### 示例
+**参数说明：**
+
+- `-d`: 指定使用的 GPU ID（例如：`-d 0` 表示使用 GPU 0）
+- `-e`: 指定要评估的 epoch 列表，可指定一个或多个（例如：`-e 24` 或 `-e 12 24 36`）
+
+**功能特性：**
+
+- ✅ 自动在多个遥感数据集上进行评估（DOTA2、DIOR_R、FAIR1M、SpaceNet、Xview、HRSC2016、WHU_Mix 等）
+- ✅ 支持批量评估多个 epoch 的模型
+- ✅ 自动保存评估结果（包括 `.pkl` 预测文件和 `.json` 评估结果）
+- ✅ 支持使用辅助分支进行评估（可在脚本中配置 `val_using_aux`）
+
+**使用示例：**
 
 ```bash
-# 单 GPU 测试
-python tools/test.py M_configs/Step1_A08_Large_Pretrain/A08_e_rtm_v2_base.py work_dirs/checkpoint.pth
+# 评估单个 epoch（第 24 个 epoch）
+python eval_diff_epochs.py -d 0 -e 24
 
-# 多 GPU 测试
-bash tools/dist_test.sh M_configs/Step1_A08_Large_Pretrain/A08_e_rtm_v2_base.py work_dirs/checkpoint.pth 8
+# 评估多个 epoch（第 12、24、36 个 epoch）
+python eval_diff_epochs.py -d 0 -e 12 24 36
+
+# 使用不同的 GPU
+python eval_diff_epochs.py -d 1 -e 24
 ```
+
+**注意事项：**
+
+- 使用前需要在脚本中配置模型信息（`model_info`），包括：
+  - `cfg_pth`: 配置文件路径
+  - `cfg_name`: 配置名称（用于构建 checkpoint 路径）
+  - `val_using_aux`: 使用哪个分支进行评估
+- 评估结果将保存在 `./results/TEST_EVAL/` 目录下
+- 每个 epoch 的评估结果会保存在独立的子目录中
+
 
 ### 配置文件
 
@@ -186,26 +226,67 @@ bash tools/dist_test.sh M_configs/Step1_A08_Large_Pretrain/A08_e_rtm_v2_base.py 
 MMRotate_AD_Pub/
 ├── M_AD/                    # 主要算法实现
 │   ├── models/              # 模型定义
-│   │   ├── detectors/       # 检测器
-│   │   ├── dense_heads/     # 检测头
-│   │   ├── backbones/       # 骨干网络
-│   │   └── ...
+│   │   ├── detectors/       # 检测器（Flex_Rtmdet、E_Rtmdet、Hindsight_Rtmdet 等）
+│   │   ├── dense_heads/     # 检测头（Flex_Rrtmdet_head、E_Rrtmdet_head 等）
+│   │   ├── backbones/       # 骨干网络（CSPNeXt、ViT、Swin 等）
+│   │   ├── necks/           # 颈部网络（PAFPN、Ace_fpn 等）
+│   │   ├── roi_heads/       # ROI 头（Open_standard_roi_head、Hin_Box_Prompt_head 等）
+│   │   ├── layers/          # 自定义层（Transformer、DINOv2 相关层）
+│   │   ├── task_modules/    # 任务模块（Assigner 等）
+│   │   └── utils/           # 工具函数
 │   ├── datasets/            # 数据集相关
+│   │   ├── samplers/        # 数据采样器（多任务采样器等）
+│   │   └── transforms/      # 数据变换
 │   ├── engine/              # 训练引擎
-│   └── ...
+│   │   ├── optimizers/      # 优化器
+│   │   └── runner/          # 训练运行器
+│   ├── evaluation/          # 评估相关
+│   │   └── metrics/         # 评估指标
+│   └── structures/          # 数据结构
+│       └── bbox/            # 边界框相关
 ├── M_configs/               # 配置文件
-├── tools/                   # 工具脚本
+│   ├── Step1_A08_Large_Pretrain/      # 大规模预训练配置
+│   ├── Step2_A10_Large_Pretrain_Stage3/  # 预训练第三阶段配置
+│   ├── Step3_A12_SelfTrain/           # 自训练配置
+│   └── Other/                          # 其他配置（如 InContext 学习）
+├── M_Tools/                 # 工具脚本集合
+│   ├── Eval_Tools/          # 评估工具
+│   │   ├── eval_diff_epochs.py        # 批量评估不同 epoch
+│   │   ├── auto_eval.py              # 自动评估脚本
+│   │   ├── eval_cross_data.py        # 跨数据集评估
+│   │   └── eval_configs/             # 评估配置
+│   └── Base_Data_infos/     # 数据集信息配置
+├── EXP_CONFIG/              # 实验配置管理
+│   ├── multi_train_any_gpu.py         # 多 GPU 训练调度脚本
+│   ├── multi_eval_any_gpu.py         # 多 GPU 评估调度脚本
+│   ├── py_cmd.py                      # 训练命令封装脚本
+│   └── CONFIGS/                       # 实验配置定义
+├── tools/                   # MMDetection/MMRotate 工具脚本
 │   ├── train.py            # 训练脚本
 │   ├── test.py             # 测试脚本
-│   └── ...
+│   ├── data/               # 数据处理工具（DOTA、DIOR、FAIR1M 等数据集处理）
+│   ├── analysis_tools/     # 分析工具（日志分析、结果分析等）
+│   └── model_converters/   # 模型转换工具
 ├── mmdet/                   # MMDetection 核心代码
 ├── mmrotate/                # MMRotate 核心代码
+├── mmyolo/                  # MMYOLO 核心代码（部分功能依赖）
+├── commonlibs/              # 通用工具库
+├── ctlib/                   # 自定义工具库
 ├── src/                     # 资源文件
-│   └── images/             # 图片资源
-├── requirements.txt        # 依赖列表
+│   └── images/             # 图片资源（方法示意图等）
+├── requirements.txt        # Python 依赖列表
 ├── setup.py                # 安装脚本
+├── environment.yml         # Conda 环境配置
 └── README.md               # 本文件
 ```
+
+**主要目录说明：**
+
+- **M_AD/**: 核心算法实现，包含所有自定义的模型、数据集、训练引擎等
+- **M_configs/**: 实验配置文件，按训练阶段组织
+- **M_Tools/**: 评估和数据处理工具集合
+- **EXP_CONFIG/**: 实验管理和调度脚本，支持多 GPU 自动调度
+- **tools/**: MMDetection/MMRotate 框架提供的标准工具
 
 ## 📊 结果
 
@@ -236,9 +317,6 @@ MMRotate_AD_Pub/
 }
 ```
 
-## 📜 许可证
-
-本项目采用 [Apache License 2.0](LICENSE) 许可证。
 
 ## 🙏 致谢
 
@@ -285,8 +363,8 @@ python tools/test.py ${CONFIG_FILE} ${CHECKPOINT_FILE} --eval mAP
 
 如有问题或建议，请通过以下方式联系：
 
-- 提交 [Issue](https://github.com/your-repo/issues)
-- 发送邮件至项目维护者
+- 提交 [Issue](https://github.com/floatingstarZ/OpenRSD/issues)
+- 发送邮件至项目维护者(ziyuehuang@buaa.edu.cn)
 
 ## 🔗 相关链接
 
