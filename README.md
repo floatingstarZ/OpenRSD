@@ -213,6 +213,38 @@ python eval_diff_epochs.py -d 1 -e 24
 - 评估结果将保存在 `./results/TEST_EVAL/` 目录下
 - 每个 epoch 的评估结果会保存在独立的子目录中
 
+#### SimpleRun 快速推理
+
+SimpleRun 提供了一个简化的推理脚本，适合快速在自定义测试数据集上进行推理。
+
+**使用方法：**
+
+1. 修改 `SimpleRun/step1_inference.py` 中的配置参数：
+   - `config_pth`: 配置文件路径
+   - `checkpoint_pth`: 模型权重路径
+   - `data_root`: 测试数据集根目录
+   - `cls_list`: 待检测的类别列表
+   - `gpu`: 使用的 GPU ID
+
+2. 准备测试数据：
+   - 将测试图像放在 `data_root/images/` 目录下
+   - 脚本会自动为每张图像创建虚拟标注文件（`.pkl` 格式）
+
+3. 运行推理：
+```bash
+python SimpleRun/step1_inference.py
+```
+
+**输出结果：**
+
+- 推理结果保存在 `SimpleRun/results/results.pkl` 文件中
+- 结果包含检测框坐标（`polys`）、类别（`texts`）、置信度分数（`scores`）等信息
+
+**注意事项：**
+
+- 确保已下载并配置好模型权重和 support 特征文件
+- 可根据需要修改 `val_using_aux` 参数选择使用对齐头（False）或融合头（True）
+- 可通过 `iou_thr` 和 `score_thr` 参数调整 NMS 和置信度阈值
 
 ### 配置文件
 
