@@ -1,45 +1,9 @@
 _base_ = ['./base_rtmdet_l.py',
           './base_settings_dior_rtmdet.py']
-
-"""
-一些.pkl文件的说明：
-1. support_feat_dict：
-   - 用于存储visual和text的support embeddings
-   - key：数据集标志
-   - value：support_feat_pth：支持特征的pth文件路径
-   - 支持特征的pth文件格式为：
-     - {
-       'class_name': {
-         'visual_embeds': [visual_embed1, visual_embed2, ...], # C, 1024维度的ndarray，C为类别数量，1024为视觉特征维度
-         'text_embeds': [text_embed1, text_embed2, ...]        # C, 768维度的ndarray，C为类别数量，768为文本特征维度
-       }
-     }
-2. pca_meta_pth:
-   - 可以用于对visual特征进行降维和聚类，没有使用
-3. normalized_class_dict:
-   - 类别名称归一化字典，用于将不同数据集的类别名称映射到统一的归一化名称
-   - 作用：
-     a) 解决不同数据集中相同类别但名称不同的问题（如 "airplane" vs "plane"）
-     b) 在初始化时，将所有数据集的support特征中的类别名称归一化
-     c) 在训练时，对batch中样本的类别标签（sample.gt_instances.texts和sample.cls_list）进行归一化
-     d) 用于合并不同数据集中相同归一化类别的support特征，构造统一的uni_support_data
-   - 文件格式：dict，key为原始类别名，value为归一化后的类别名
-   - 如果某个类别不在字典中，会自动添加映射（原始名->原始名）
-4. neg_support_data:
-   - 包含all_support、cls_tree、parent_mapping和neg_dict四个字段
-   - **neg_dict**：预定义的类别到负样本类别的映射关系
-      - key：数据集标志
-      - value：dict，key为类别名，value为负样本类别列表
-        - key：类别名
-        - value：负样本类别列表（根据parent_mapping，不属于同一父节点的类别为负样本类别）
-   - cls_tree：类别树结构，用于构造neg_dict，没有用到
-   - parent_mapping：各个数据集的类别父节点映射，没有用到
-   - all_support: 所有类别的embeddings，没有用到
-
-"""
+find_unused_parameters = True
 
 #########################
-val_img_scale = (800, 800)
+val_img_scale = (1024, 1024)
 val_support_classes = ['airport', 'baseball-diamond', 'basketball-court',
                        'bridge', 'container-crane', 'ground-track-field',
                        'harbor', 'helicopter', 'helipad', 'large-vehicle',
@@ -94,21 +58,34 @@ val_dataloader = dict(
 test_dataloader = val_dataloader
 #########################
 
-load_from = './results/MMR_AD_A08_e_rtm_v2_base_recheck/epoch_36.pth'
-frozen_parameters = ['backbone', 'neck']# ['backbone.stem']
-batch_size = 2
-data_root = '/data/space2/huangziyue'
+# load_from = './results/MMR_AD_A12_flex_rtm_v3_1_self_training_Labelver5/epoch_24.pth'
+# frozen_parameters = ['backbone', 'neck']# ['backbone.stem']
+# batch_size = 2
+# data_root = '/data/space2/huangziyue'
 
-# load_from = './results/MMR_AD_A08_e_rtm_v2_base_recheck/epoch_36.pth'
-# frozen_parameters = ['backbone.stem']
-# batch_size = 4
-# data_root = '/gpfsdata/home/huangziyue/data'
+load_from = './results/MMR_AD_A12_flex_rtm_v3_1_self_training_Labelver5/epoch_24.pth'
+frozen_parameters = ['backbone.stem']
+batch_size = 4
+data_root = '/gpfsdata/home/huangziyue/data'
 
 
-max_epochs = 24
-base_lr = 0.004 / max_epochs
+max_epochs = 8
+base_lr = 0.004 / 24
 
-train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=max_epochs, val_interval=2)
+custom_keys = {
+    'backbone': dict(lr_mult=0.1, decay_mult=1.0),
+    'neck':  dict(lr_mult=0.1, decay_mult=1.0),
+}
+
+optim_wrapper = dict(
+    type='OptimWrapper',
+    optimizer=dict(type='AdamW', lr=base_lr, weight_decay=0.05),
+    clip_grad=dict(max_norm=10, norm_type=2),
+    paramwise_cfg=dict(
+        norm_decay_mult=0, bias_decay_mult=0, bypass_duplicate=True,
+        custom_keys=custom_keys))
+
+train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=max_epochs, val_interval=1)
 val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
 
@@ -164,8 +141,8 @@ custom_imports = dict(
         'M_AD.datasets.samplers.one_task_sampler',
 
         'M_AD.models.task_modules.assigners.safe_dynamic_soft_label_assigner',
-        'M_AD.models.detectors.Flex_Rtmdet_v3_1_formal',
-        'M_AD.models.dense_heads.Flex_Rrtmdet_head_v3_1',
+        'M_AD.models.detectors.Flex_Rtmdet_v3_1_simple',
+        'M_AD.models.dense_heads.Flex_Rrtmdet_head_v3_1_simple',
 
         'M_AD.models.roi_heads.CLIP_VP_head_v1',
         'M_AD.models.necks.promopt_cspnext_pafpn',
@@ -227,26 +204,26 @@ model = dict(
     val_dataset_flag=val_dataset_flag,
     neg_support_data='./data/Neg_supports_v2.pkl',
     normalized_class_dict='./data/normalized_class_dict.pkl',
-    max_neg_sample=36, # 最大负样本数量
-    val_using_aux=False, # True为使用Fusion Head。False为使用Align Head
-    support_type='random', # 'random'为随机采样，'text'为文本采样，'visual'为视觉采样
+    max_neg_sample=36,
+    val_using_aux=False,
+    support_type='random',
     ################
-    with_image_rec_losses=True, # True为使用图像重建损失。False为不使用，实际对性能影响不大
+    with_image_rec_losses=False,
     ################
     # -------- head
     bbox_head=dict(
         type='OpenRotatedRTMDetSepBNHead',
-        embed_dims=embed_dims, # 256，embeddings经过MLP映射后的维度
-        num_classes=21, # 无用处
+        embed_dims=embed_dims,
+        num_classes=21,
         #############
-        with_obj_align=True, # True为使用对齐损失
-        with_slot_embed=True, # 是否加上slot embedding，默认使用
-        cross_mlp_dim=2048, # 交叉注意力模块的MLP维度
-        cross_num_layers=3, # 交叉注意力模块的层数
+        with_obj_align=True,
+        with_slot_embed=True,
+        cross_mlp_dim=2048,
+        cross_num_layers=3,
     ),
     train_cfg=dict(
         assigner=dict(
-            type='SafeDynamicSoftLabelAssigner') # 改进的assigner，避免显存爆炸
+            type='SafeDynamicSoftLabelAssigner')
     ),
 
 )
@@ -459,15 +436,12 @@ train_dataloader = dict(
         type='mmdet.ConcatDataset', datasets=[Data1_DOTA2,
                                               Data2_DIOR_R,
                                               Data3_FAIR1M,
-
                                               Data5_SpaceNet,
                                               Data6_Xview,
                                               Data7_HRSC2016,
-
                                               Data8_GLH_Bridge,
                                               Data9_FMoW,
                                               Data11_WHU_Mix,
-
                                               Data12_ShipImageNet
                                               ]))
 

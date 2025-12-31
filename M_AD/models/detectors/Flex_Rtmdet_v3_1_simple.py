@@ -48,15 +48,20 @@ from ctlib.transform import to_array
 from M_Loggers.loggers import GloLogger
 from M_Loggers.utils import AutoLogger
 from copy import deepcopy
-from M_AD.models.dense_heads.D_Rrtmdet_head_Simple_Base_v1 import OpenRotatedRTMDetSepBNHeadSimpleBase
+from M_AD.models.dense_heads.D_Rrtmdet_head_Simple_Base_v7_Simple import OpenRotatedRTMDetSepBNHeadSimpleBase
 from functools import reduce
 """
-让v3_1更合理一些：
-1. 使用sample.cls_list和统一的uni_support来构造batch的support_labels和feats
-    1. 目的：利用上FederatedLabels
-2. 使用normalized_class_dict将各个类别映射到统一名称
-    1. 目的：避免negative和positive出现相同名称，导致错误
-3. neg_support_data改为uni_support_data，并且不用额外载入，直接使用多数据集的support构造
+进一步简化v3_1的设计：
+1. 去掉text的support mapping, align head直接对齐，使用text fc
+2. 保留visual的support mapping, 在align head中映射为256，然后对齐，使用visual fc
+3. fusion head添加一个对support mapping的额外映射，映射到256
+总结：
+1. 在Detector中，vis_p -> visual_support_mapping -> vis_p* (768)
+                text_p -> text_p* (768)
+   获得的p送入到检测头中
+2. 在Alignment Head中，检测器特征x -> vis_fc or text_fc -> 768，与p对齐
+3. 在Fusion Head中，x -> vis_fc or text_fc -> 256, p -> vis / text support -> 256
+
 """
 
 class MultiLevelFusionDecoder(nn.Module):
@@ -202,9 +207,9 @@ class OpenRTMDet(SingleStageDetector):
                     self.norm_cls_map[k] = k
                     print(f'Add New key in norm_cls_map: {k}')
                 normed_k = self.norm_cls_map[k]
-                if len(v['visual_embeds']) <= 10:
+                if len(v['visual_embeds']) < 10:
                     v['visual_embeds'] = np.concatenate([v['visual_embeds'] for i in range(10)])
-                if len(v['text_embeds']) <= 10:
+                if len(v['text_embeds']) < 10:
                     v['text_embeds'] = np.concatenate([v['text_embeds'] for i in range(10)])
                 normed_support_data[normed_k] = v
                 # ----- 构造统一的support
@@ -253,15 +258,11 @@ class OpenRTMDet(SingleStageDetector):
         self.pca_meta = pklload(pca_meta_pth)
         ############################################        DINO -> embeds
         self.visual_support_mapping = nn.Sequential(
-            nn.Linear(1024, 1024),
+            nn.Linear(1024, 768),
             nn.ReLU(inplace=True),
-            nn.Linear(1024, embed_dims)
+            nn.Linear(768, 768)
         )
-        self.text_support_mapping = nn.Sequential(
-            nn.Linear(768, 1024),
-            nn.ReLU(inplace=True),
-            nn.Linear(1024, embed_dims)
-        )
+        self.text_support_mapping = nn.Identity()
         self.support_type = support_type
         ########################################
         conv_cfg = None
@@ -296,7 +297,7 @@ class OpenRTMDet(SingleStageDetector):
                 train_cfg=train_cfg,
                 test_cfg=test_cfg,
                 ##################
-                embed_dims=embed_dims,
+                embed_dims=768,
                 with_obj_align=self.bbox_head.with_obj_align,
             )
             self.aux_convs = nn.ModuleList()
@@ -399,15 +400,6 @@ class OpenRTMDet(SingleStageDetector):
                                            dataset_flag=dataset_flag)
 
             losses.update(IT_losses)
-        # if dataset_flag in ['D4_HRRSD', 'D6_Xview']:
-        #     for k, v in losses.items():
-        #         if 'bbox' in k:
-        #             # print(f'got {dataset_flag}, set loss zero')
-        #             if type(v) in [tuple, list]:
-        #                 losses[k] = [i * 0.0 for i in v]
-        #             else:
-        #                 losses[k] = v * 0.0
-        #             # print(losses)
 
         return losses
 
@@ -429,7 +421,7 @@ class OpenRTMDet(SingleStageDetector):
         kwargs = dict()
         ##### ------------ Support：support feats是clip embeddings，默认为一个类
         num_classes = len(support_name2id)
-        support_shot = int(np.random.randint(3, 7))
+        support_shot = int(np.random.randint(1, 5))
         support_feat_lens = [len(support_info[embed_name])
                              for support_info in support_data.values()]
         min_feat_len = min(support_feat_lens)
@@ -438,7 +430,7 @@ class OpenRTMDet(SingleStageDetector):
         kwargs['support_shot'] = support_shot
         kwargs['num_classes'] = num_classes
         kwargs['num_in_classes'] = num_classes
-        kwargs['align_style'] = 'labelled'
+        kwargs['support_type'] = support_type
         ##### ------------ 设置Instance的标签
         start = 0
         device = x[0].device
@@ -601,209 +593,6 @@ class OpenRTMDet(SingleStageDetector):
 
         return losses
 
-    def loss_img_text(self,
-                      x,
-                      batch_data_samples):
-        """
-        纯图像的预训练：
-        1. Support:              Visual Embeds
-        2. Support类别：          聚类获得
-        3. Object Embeddings:    [Visual embeds,]
-        4. 对齐方式：              [Contrastive  ,]
-        :param x:
-        :param batch_data_samples:
-        :return:
-        """
-        kwargs = dict()
-        losses = dict()
-        device = x[0].device
-
-        ##### ------- 聚类获得标签, 1024 -> PCA -> 256 -> GMeans Cluster -> 20~40 class
-        num_classes = []
-        support_feats_list = []
-        support_labels_list = []
-        start = 0
-        for sample in batch_data_samples:
-            texts = np.array(sample.gt_instances.texts)
-            embeds = sample.gt_instances.visual_embeds
-            embeds = self.visual_support_mapping(embeds.to(device).float())
-            text_set = set(list(sample.gt_instances.texts))
-            n_class = len(text_set)
-            n_embed = len(embeds)
-            num_classes.append(n_class)
-
-            labels = np.zeros(n_embed)
-            support_feats = []
-            support_labels = []
-            for i, cls_name in enumerate(text_set):
-                labels[texts == cls_name] = i
-                cls_embed = torch.mean(embeds[texts == cls_name], dim=0)
-                support_feats.append(cls_embed)
-                support_labels.append(i)
-            if len(support_feats) == 0:
-                print(len(support_feats))
-                print(sample.metainfo)
-                a = 0
-            support_feats = torch.stack(support_feats)
-            support_labels = torch.tensor(support_labels).to(device).long()
-            support_feats_list.append(support_feats)
-            support_labels_list.append(support_labels)
-
-            sample.gt_instances['labels'] = torch.tensor(labels).to(device).long()
-            ins_labels = torch.arange(start, start + n_embed).to(device)
-            sample.gt_instances['ins_labels'] = ins_labels
-
-        ################################
-        kwargs['support_shot'] = 1
-        kwargs['num_classes'] = max(num_classes)
-        kwargs['num_in_classes'] = max(num_classes)
-        kwargs['align_style'] = 'pure_img'
-
-        ##### ------------ Support：support feats是clip embeddings，默认为一个类
-        ##### ------------ 构造 视觉对齐的target
-        all_obj_embeds = [sample.gt_instances.visual_embeds for sample in batch_data_samples]
-        all_obj_labels = [sample.gt_instances.ins_labels for sample in batch_data_samples]  # 实例区分
-        ##### ------------ 对support
-        max_support_len = max([len(f) for f in support_feats_list])
-        support_feats = []
-        support_labels = []
-        for f, l in zip(support_feats_list, support_labels_list):
-            if len(f) == max_support_len:
-                support_feats.append(f)
-                support_labels.append(l)
-                continue
-            n_pad = max_support_len - len(f)
-            pad_feats = torch.zeros([n_pad, f.shape[-1]]).float().to(device)
-            pad_labels = torch.ones(n_pad).long().to(device) * -1
-            support_feats.append(torch.cat([f, pad_feats]))
-            support_labels.append(torch.cat([l, pad_labels]))
-        support_feats = torch.stack(support_feats)
-        support_labels = torch.stack(support_labels)
-        ##### ------------ 损失计算
-        PI_losses = self.bbox_head.loss(x,
-                                        batch_data_samples,
-                                        support_feats,
-                                        support_labels,
-                                        support_labels,
-                                        all_obj_embeds,
-                                        all_obj_labels,
-                                        **kwargs)
-        losses.update(PI_losses)
-        if self.aux_bbox_head is not None:
-            x_aux = [self.aux_convs[i](f) for i, f in enumerate(x)]
-            PI_losses_ex = self.aux_bbox_head.loss(x_aux,
-                                                   batch_data_samples,
-                                                   support_feats,
-                                                   support_labels,
-                                                   support_labels,
-                                                   all_obj_embeds,
-                                                   all_obj_labels,
-                                                   **kwargs)
-            for k, v in PI_losses_ex.items():
-                losses['Ex_' + k] = v
-        return losses
-
-    def loss_pure_img(self,
-                      x,
-                      batch_data_samples):
-        """
-        纯图像的预训练：
-        1. Support:              Visual Embeds
-        2. Support类别：          聚类获得
-        3. Object Embeddings:    [Visual embeds,]
-        4. 对齐方式：              [Contrastive  ,]
-        :param x:
-        :param batch_data_samples:
-        :return:
-        """
-        kwargs = dict()
-        losses = dict()
-        device = x[0].device
-
-        ##### ------- 聚类获得标签, 1024 -> PCA -> 256 -> GMeans Cluster -> 20~40 class
-        num_classes = []
-        support_feats_list = []
-        support_labels_list = []
-        start = 0
-        for sample in batch_data_samples:
-            texts = np.array(sample.gt_instances.texts)
-            embeds = sample.gt_instances.visual_embeds
-            embeds = self.visual_support_mapping(embeds.to(device).float())
-            text_set = set(list(sample.gt_instances.texts))
-            n_class = len(text_set)
-            n_embed = len(embeds)
-            num_classes.append(n_class)
-
-            labels = np.zeros(n_embed)
-            support_feats = []
-            support_labels = []
-            for i, cls_name in enumerate(text_set):
-                labels[texts == cls_name] = i
-                cls_embed = torch.mean(embeds[texts == cls_name], dim=0)
-                support_feats.append(cls_embed)
-                support_labels.append(i)
-            if len(support_feats) == 0:
-                print(len(support_feats))
-                print(sample.metainfo)
-                a = 0
-            support_feats = torch.stack(support_feats)
-            support_labels = torch.tensor(support_labels).to(device).long()
-            support_feats_list.append(support_feats)
-            support_labels_list.append(support_labels)
-
-            sample.gt_instances['labels'] = torch.tensor(labels).to(device).long()
-            ins_labels = torch.arange(start, start + n_embed).to(device)
-            sample.gt_instances['ins_labels'] = ins_labels
-
-        ################################
-        kwargs['support_shot'] = 1
-        kwargs['num_classes'] = max(num_classes)
-        kwargs['num_in_classes'] = max(num_classes)
-        kwargs['align_style'] = 'pure_img'
-
-        ##### ------------ Support：support feats是clip embeddings，默认为一个类
-        ##### ------------ 构造 视觉对齐的target
-        all_obj_embeds = [sample.gt_instances.visual_embeds for sample in batch_data_samples]
-        all_obj_labels = [sample.gt_instances.ins_labels for sample in batch_data_samples]  # 实例区分
-        ##### ------------ 对support
-        max_support_len = max([len(f) for f in support_feats_list])
-        support_feats = []
-        support_labels = []
-        for f, l in zip(support_feats_list, support_labels_list):
-            if len(f) == max_support_len:
-                support_feats.append(f)
-                support_labels.append(l)
-                continue
-            n_pad = max_support_len - len(f)
-            pad_feats = torch.zeros([n_pad, f.shape[-1]]).float().to(device)
-            pad_labels = torch.ones(n_pad).long().to(device) * -1
-            support_feats.append(torch.cat([f, pad_feats]))
-            support_labels.append(torch.cat([l, pad_labels]))
-        support_feats = torch.stack(support_feats)
-        support_labels = torch.stack(support_labels)
-        ##### ------------ 损失计算
-        PI_losses = self.bbox_head.loss(x,
-                                        batch_data_samples,
-                                        support_feats,
-                                        support_labels,
-                                        support_labels,
-                                        all_obj_embeds,
-                                        all_obj_labels,
-                                        **kwargs)
-        losses.update(PI_losses)
-        if self.aux_bbox_head is not None:
-            x_aux = [self.aux_convs[i](f) for i, f in enumerate(x)]
-            PI_losses_ex = self.aux_bbox_head.loss(x_aux,
-                                                   batch_data_samples,
-                                                   support_feats,
-                                                   support_labels,
-                                                   all_obj_embeds,
-                                                   all_obj_labels,
-                                                   **kwargs)
-            for k, v in PI_losses_ex.items():
-                losses['Ex_' + k] = v
-        return losses
-
     @torch.no_grad()
     def predict(self,
                 batch_inputs: Tensor,
@@ -826,6 +615,7 @@ class OpenRTMDet(SingleStageDetector):
         x = self.extract_feat(batch_inputs)
         ##### ------------ 随机采样，构造support_feats
         kwargs = dict()
+        kwargs['support_type'] = support_type
         ##### ------------ Support：support feats是clip embeddings，默认为一个类
         num_classes = len(self.val_name2id)
         if self.num_val_prompts == 0:
