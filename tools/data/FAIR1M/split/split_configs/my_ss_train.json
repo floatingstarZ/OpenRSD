@@ -1,0 +1,30 @@
+{
+  "nproc": 10,
+  "img_dirs": [
+    "/data/space2/huangziyue/FAIR1M2.0/train/part1/images",
+    "/data/space2/huangziyue/FAIR1M2.0/train/part2/images"
+  ],
+  "ann_dirs": [
+    "/data/space2/huangziyue/FAIR1M2.0/train/part1/labelTxt",
+    "/data/space2/huangziyue/FAIR1M2.0/train/part2/labelTxt"
+  ],
+  "sizes": [
+    1024
+  ],
+  "gaps": [
+    0
+  ],
+  "rates": [
+    1.0
+  ],
+  "img_rate_thr": 0.6,
+  "iof_thr": 0.7,
+  "no_padding": false,
+  "padding_value": [
+    104,
+    116,
+    124
+  ],
+  "save_dir": "/data/space2/huangziyue/FAIR1M_1024_0_8_4_New/train",
+  "save_ext": ".png"
+}

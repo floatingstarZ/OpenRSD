@@ -121,5 +121,5 @@ work_dirs/
 *.sh~
 
 # others
-data/
+/data/
 results/

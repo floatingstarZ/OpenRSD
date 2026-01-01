@@ -1,0 +1,28 @@
+{
+  "nproc": 10,
+  "img_dirs": [
+    "/data/space2/huangziyue/OHD-SJTU/OHD-SJTU-L/test/images"
+  ],
+  "ann_dirs": [
+    "/data/space2/huangziyue/OHD-SJTU/OHD-SJTU-L/test/rotation_txt"
+  ],
+  "sizes": [
+    600
+  ],
+  "gaps": [
+    150
+  ],
+  "rates": [
+    1.0
+  ],
+  "img_rate_thr": 0.6,
+  "iof_thr": 0.7,
+  "no_padding": false,
+  "padding_value": [
+    104,
+    116,
+    124
+  ],
+  "save_dir": "/data/space2/huangziyue/OHD_SJTU_L_600_150/test",
+  "save_ext": ".png"
+}

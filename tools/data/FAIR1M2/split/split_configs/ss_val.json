@@ -1,0 +1,28 @@
+{
+  "nproc": 10,
+  "img_dirs": [
+    "data/FAIR1M2.0/validation/images/"
+  ],
+  "ann_dirs": [
+    "data/FAIR1M2.0/validation/labelTxt/"
+  ],
+  "sizes": [
+    1024
+  ],
+  "gaps": [
+    0
+  ],
+  "rates": [
+    1.0
+  ],
+  "img_rate_thr": 0.6,
+  "iof_thr": 0.7,
+  "no_padding": false,
+  "padding_value": [
+    104,
+    116,
+    124
+  ],
+  "save_dir": "data/FAIR1M_2_800_400/ss_val/",
+  "save_ext": ".png"
+}

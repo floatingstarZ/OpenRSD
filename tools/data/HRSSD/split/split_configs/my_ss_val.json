@@ -1,0 +1,28 @@
+{
+  "nproc": 10,
+  "img_dirs": [
+    "/extra_data/space2/huangziyue/Dataset-OPT2017-JPEGImages/DOTA_version/val/images"
+  ],
+  "ann_dirs": [
+    "/extra_data/space2/huangziyue/Dataset-OPT2017-JPEGImages/DOTA_version/val/labelTxt"
+  ],
+  "sizes": [
+    800
+  ],
+  "gaps": [
+    0
+  ],
+  "rates": [
+    1.0
+  ],
+  "img_rate_thr": 0.6,
+  "iof_thr": 0.7,
+  "no_padding": false,
+  "padding_value": [
+    104,
+    116,
+    124
+  ],
+  "save_dir": "/extra_data/space2/huangziyue/HRRSD_800_0/val",
+  "save_ext": ".png"
+}

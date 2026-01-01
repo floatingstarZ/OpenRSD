@@ -1,0 +1,26 @@
+{
+  "nproc": 10,
+  "img_dirs": [
+    "data/cooling_tower/test_tif"
+  ],
+  "ann_dirs": null,
+  "sizes": [
+    1024
+  ],
+  "gaps": [
+    500
+  ],
+  "rates": [
+    1.0
+  ],
+  "img_rate_thr": 0.6,
+  "iof_thr": 0.7,
+  "no_padding": false,
+  "padding_value": [
+    104,
+    116,
+    124
+  ],
+  "save_dir": "data/cooling_tower/DOTA_test/",
+  "save_ext": ".png"
+}
