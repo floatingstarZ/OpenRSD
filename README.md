@@ -67,7 +67,7 @@ cd OpenRSD
 
 ```bash
 # 只创建环境
-conda create -n openrsd python=3.8 -y
+conda create -n openrsd python=3.10 -y
 # 或者你可以使用environment.yml来同时安装所有依赖（CUDA 10.2环境）
 conda env create -f environment.yml
 ```
@@ -78,8 +78,10 @@ conda env create -f environment.yml
 
 ```bash
 conda activate openrsd
-# 例如 CUDA 11.1
+# 例如 CUDA 11.1，用conda
 conda install pytorch torchvision torchaudio cudatoolkit=11.1 -c pytorch
+# 例如 CUDA 12.6，用pip
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
 ```
 
 ### 4. 安装依赖

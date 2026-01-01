@@ -1,0 +1,13 @@
+addict
+matplotlib
+numpy
+opencv-python
+packaging
+pandas
+pillow
+pydantic
+PyYAML
+requests
+rich
+tqdm
+yapf

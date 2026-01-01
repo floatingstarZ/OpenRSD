@@ -1,56 +1,24 @@
-#!/usr/bin/env python
-# Copyright (c) OpenMMLab. All rights reserved.
 import os
 import os.path as osp
-import platform
 import shutil
 import sys
 import warnings
 from setuptools import find_packages, setup
 
-import torch
-from torch.utils.cpp_extension import (BuildExtension, CppExtension,
-                                       CUDAExtension)
-
 
 def readme():
+    """Load README.md."""
     with open('README.md', encoding='utf-8') as f:
         content = f.read()
     return content
 
 
-version_file = 'mmdet/version.py'
-
-
 def get_version():
+    """Get version of mmrotate."""
+    version_file = 'mmrotate/version.py'
     with open(version_file, 'r') as f:
         exec(compile(f.read(), version_file, 'exec'))
     return locals()['__version__']
-
-
-def make_cuda_ext(name, module, sources, sources_cuda=[]):
-
-    define_macros = []
-    extra_compile_args = {'cxx': []}
-
-    if torch.cuda.is_available() or os.getenv('FORCE_CUDA', '0') == '1':
-        define_macros += [('WITH_CUDA', None)]
-        extension = CUDAExtension
-        extra_compile_args['nvcc'] = [
-            '-D__CUDA_NO_HALF_OPERATORS__',
-            '-D__CUDA_NO_HALF_CONVERSIONS__',
-            '-D__CUDA_NO_HALF2_OPERATORS__',
-        ]
-        sources += sources_cuda
-    else:
-        print(f'Compiling {name} without CUDA')
-        extension = CppExtension
-
-    return extension(
-        name=f'{module}.{name}',
-        sources=[os.path.join(*module.split('.'), p) for p in sources],
-        define_macros=define_macros,
-        extra_compile_args=extra_compile_args)
 
 
 def parse_requirements(fname='requirements.txt', with_version=True):
@@ -67,9 +35,9 @@ def parse_requirements(fname='requirements.txt', with_version=True):
     CommandLine:
         python -c "import setup; print(setup.parse_requirements())"
     """
-    import re
     import sys
     from os.path import exists
+    import re
     require_fpath = fname
 
     def parse_line(line):
@@ -142,11 +110,7 @@ def add_mim_extension():
     # parse installment mode
     if 'develop' in sys.argv:
         # installed by `pip install -e .`
-        if platform.system() == 'Windows':
-            # set `copy` mode here since symlink fails on Windows.
-            mode = 'copy'
-        else:
-            mode = 'symlink'
+        mode = 'symlink'
     elif 'sdist' in sys.argv or 'bdist_wheel' in sys.argv:
         # installed by `pip install .`
         # or create source distribution by `python setup.py sdist`
@@ -154,11 +118,9 @@ def add_mim_extension():
     else:
         return
 
-    filenames = [
-        'tools', 'configs', 'demo', 'model-index.yml', 'dataset-index.yml'
-    ]
+    filenames = ['tools', 'configs', 'demo', 'model-index.yml']
     repo_path = osp.dirname(__file__)
-    mim_path = osp.join(repo_path, 'mmdet', '.mim')
+    mim_path = osp.join(repo_path, 'mmrotate', '.mim')
     os.makedirs(mim_path, exist_ok=True)
 
     for filename in filenames:
@@ -173,8 +135,20 @@ def add_mim_extension():
 
             if mode == 'symlink':
                 src_relpath = osp.relpath(src_path, osp.dirname(tar_path))
-                os.symlink(src_relpath, tar_path)
-            elif mode == 'copy':
+                try:
+                    os.symlink(src_relpath, tar_path)
+                except OSError:
+                    # Creating a symbolic link on windows may raise an
+                    # `OSError: [WinError 1314]` due to privilege. If
+                    # the error happens, the src file will be copied
+                    mode = 'copy'
+                    warnings.warn(
+                        f'Failed to create a symbolic link for {src_relpath}, '
+                        f'and it will be copied to {tar_path}')
+                else:
+                    continue
+
+            if mode == 'copy':
                 if osp.isfile(src_path):
                     shutil.copyfile(src_path, tar_path)
                 elif osp.isdir(src_path):
@@ -188,25 +162,27 @@ def add_mim_extension():
 if __name__ == '__main__':
     add_mim_extension()
     setup(
-        name='mmdet',
+        name='mmrotate',
         version=get_version(),
-        description='OpenMMLab Detection Toolbox and Benchmark',
+        description='Rotation Detection Toolbox and Benchmark',
         long_description=readme(),
         long_description_content_type='text/markdown',
-        author='MMDetection Contributors',
+        author='MMRotate Authors',
         author_email='openmmlab@gmail.com',
-        keywords='computer vision, object detection',
-        url='https://github.com/open-mmlab/mmdetection',
+        keywords='computer vision, object detection, rotation detection',
+        url='https://github.com/open-mmlab/mmrotate',
         packages=find_packages(exclude=('configs', 'tools', 'demo')),
         include_package_data=True,
         classifiers=[
-            'Development Status :: 5 - Production/Stable',
+            'Development Status :: 4 - Beta',
             'License :: OSI Approved :: Apache Software License',
             'Operating System :: OS Independent',
             'Programming Language :: Python :: 3',
+            'Programming Language :: Python :: 3.6',
             'Programming Language :: Python :: 3.7',
             'Programming Language :: Python :: 3.8',
             'Programming Language :: Python :: 3.9',
+            'Programming Language :: Python :: 3.10',
         ],
         license='Apache License 2.0',
         install_requires=parse_requirements('requirements/runtime.txt'),
@@ -216,9 +192,5 @@ if __name__ == '__main__':
             'build': parse_requirements('requirements/build.txt'),
             'optional': parse_requirements('requirements/optional.txt'),
             'mim': parse_requirements('requirements/mminstall.txt'),
-            'tracking': parse_requirements('requirements/tracking.txt'),
-            'multimodal': parse_requirements('requirements/multimodal.txt'),
         },
-        ext_modules=[],
-        cmdclass={'build_ext': BuildExtension},
         zip_safe=False)
