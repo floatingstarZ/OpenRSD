@@ -224,14 +224,43 @@ python eval_diff_epochs.py -d 1 -e 24
 
 SimpleRun 提供了一个简化的推理脚本，适合快速在自定义测试数据集上进行推理。
 
+**快速开始资源：**
+
+如果您想快速测试 SimpleRun，可以下载以下轻量级资源包（仅包含 checkpoint 和 visual/text embeddings）：
+
+> 通过网盘分享的文件：OpenRSD_Ckpoint_pkl
+> 链接: https://pan.baidu.com/s/1qJJb6NW5DW1hpXpxWOdrOg?pwd=cwy9 提取码: cwy9
+> --来自百度网盘超级会员v9的分享
+
+此资源包包含：
+- 预训练模型权重（checkpoint）
+- Visual 和 Text Embeddings（support 特征文件）
+- 可直接用于运行 SimpleRun 推理代码
+
 **使用方法：**
+
+**Step 1: 转换模型权重格式**
+
+首先需要将训练好的模型转换为 weights_only 格式（用于推理加载）：
+
+1. 修改 `SimpleRun/step2_trans_to_weights_only.py` 中的路径参数：
+   - `src_ckpt`: 原始训练checkpoint路径（如 `epoch_24.pth`）
+   - `dst_ckpt`: 输出的weights_only checkpoint路径（如 `epoch_24_weights_only.pth`）
+
+2. 运行转换脚本：
+```bash
+python SimpleRun/step2_trans_to_weights_only.py
+```
+
+**Step 2: 执行推理**
 
 1. 修改 `SimpleRun/step1_inference.py` 中的配置参数：
    - `config_pth`: 配置文件路径
-   - `checkpoint_pth`: 模型权重路径
+   - `checkpoint_pth`: 模型权重路径（使用 Step 1 生成的 weights_only 文件）
    - `data_root`: 测试数据集根目录
-   - `cls_list`: 待检测的类别列表
+   - `cls_list`: 待检测的类别列表（如 `['building', 'vehicle']`）
    - `gpu`: 使用的 GPU ID
+   - `support_feat_dict`: 各数据集对应的 support 特征文件路径
 
 2. 准备测试数据：
    - 将测试图像放在 `data_root/images/` 目录下
@@ -252,6 +281,7 @@ python SimpleRun/step1_inference.py
 - 确保已下载并配置好模型权重和 support 特征文件
 - 可根据需要修改 `val_using_aux` 参数选择使用对齐头（False）或融合头（True）
 - 可通过 `iou_thr` 和 `score_thr` 参数调整 NMS 和置信度阈值
+- `cls_list` 中的类别需要在 support 特征文件中存在
 
 ### 配置文件
 
