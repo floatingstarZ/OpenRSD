@@ -91,7 +91,12 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 pip install -v -e .
 # 或者
 python setup.py develop
-
+# MMCV可能不支持，需要git下来安装（TODO）
+# 参考1：https://github.com/open-mmlab/mmcv/issues/3283#issuecomment-3619829440
+git clone https://github.com/open-mmlab/mmcv.git
+cd mmcv
+# pip install -e . --no-build-isolation
+python setup.py install
 ```
 
 ## 📦 数据和模型

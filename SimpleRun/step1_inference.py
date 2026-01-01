@@ -26,7 +26,7 @@ from mmengine.utils import path
 
 # ==================== 全局配置参数 ====================
 # 目录以及文件
-proj_root = '/opt/data/nfs/huangziyue/Projects/MMRotate_AD_Pub'
+proj_root = '../'
 os.chdir(proj_root)
 out_ann_pth = f'./SimpleRun/results/results.pkl'
 os.makedirs('./SimpleRun/results', exist_ok=True)
