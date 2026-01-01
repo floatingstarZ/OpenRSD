@@ -2,7 +2,7 @@
 import argparse
 import os
 from pathlib import Path
-import os
+import sys
 import json
 import pickle as pkl
 import traceback
@@ -26,14 +26,15 @@ from mmengine.utils import path
 
 # ==================== 全局配置参数 ====================
 # 目录以及文件
-proj_root = '../'
+proj_root = '/workspace/OpenRSD'
+sys.path.append(proj_root)
 os.chdir(proj_root)
 out_ann_pth = f'./SimpleRun/results/results.pkl'
 os.makedirs('./SimpleRun/results', exist_ok=True)
 # 模型配置
 config_pth = './M_configs/Step3_A12_SelfTrain/A12_flex_rtm_v3_1_self_training_Labelver5.py'
 work_dir = './SimpleRun/work_dirs'
-checkpoint_pth = './results/MMR_AD_A12_flex_rtm_v3_1_self_training_Labelver5/epoch_24.pth'
+checkpoint_pth = './results/MMR_AD_A10_flex_rtm_v3_1_formal/epoch_24_weights_only.pth'
 # GPU设置
 gpu = 4
 

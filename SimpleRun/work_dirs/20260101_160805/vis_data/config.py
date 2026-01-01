@@ -1192,7 +1192,7 @@ img_scale = (
     832,
 )
 launcher = 'none'
-load_from = './results/MMR_AD_A10_flex_rtm_v3_1_formal/epoch_24_weights_only.pth'
+load_from = './results/MMR_AD_A12_flex_rtm_v3_1_self_training_Labelver5/epoch_24.pth'
 log_level = 'INFO'
 log_processor = dict(by_epoch=True, type='LogProcessor', window_size=50)
 max_epochs = 24

@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-from collections import Sequence
+from collections.abc import Sequence
+# from collections import Sequence
 from typing import List, Tuple, Union
 
 from mmdet.models.detectors.base import BaseDetector

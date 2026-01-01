@@ -193,7 +193,7 @@ model = dict(
         'Data9_FMoW': './data/FMoW/train/Step5_3_Prepare_Visual_Text_DINOv2_support.pkl',
         'Data11_WHU_Mix': './data/WHU_Mix/train/Step5_3_Prepare_Visual_Text_DINOv2_support.pkl',
         'Data12_ShipImageNet': './data/ShipRSImageNet_DOTA/train/Step5_3_Prepare_Visual_Text_DINOv2_support.pkl',
-        'Data28_STAR': './data/STAR_800_200/val/Step5_3_Prepare_Visual_Text_DINOv2_support.pkl',
+        # 'Data28_STAR': './data/STAR_800_200/val/Step5_3_Prepare_Visual_Text_DINOv2_support.pkl',
     },
     val_support_classes=val_support_classes,
     val_dataset_flag=val_dataset_flag,

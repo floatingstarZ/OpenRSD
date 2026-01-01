@@ -1192,7 +1192,7 @@ img_scale = (
     832,
 )
 launcher = 'none'
-load_from = './results/MMR_AD_A10_flex_rtm_v3_1_formal/epoch_24_weights_only.pth'
+load_from = './results/MMR_AD_A12_flex_rtm_v3_1_self_training_Labelver5/epoch_24.pth'
 log_level = 'INFO'
 log_processor = dict(by_epoch=True, type='LogProcessor', window_size=50)
 max_epochs = 24
@@ -1315,6 +1315,8 @@ model = dict(
         './data/DOTA_800_600/train/Step5_3_Prepare_Visual_Text_DINOv2_support.pkl',
         Data1_DOTA2=
         './data/DOTA2_1024_500/train/Step5_3_Prepare_Visual_Text_DINOv2_support.pkl',
+        Data28_STAR=
+        './data/STAR_800_200/val/Step5_3_Prepare_Visual_Text_DINOv2_support.pkl',
         Data2_DIOR_R=
         './data/DIOR_R_dota/train_val/Step5_3_Prepare_Visual_Text_DINOv2_support.pkl',
         Data3_FAIR1M=
