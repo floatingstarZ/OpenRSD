@@ -1,8 +1,9 @@
-docutils==0.16.0
+docutils
 myst-parser
--e git+https://github.com/open-mmlab/pytorch_sphinx_theme.git#egg=pytorch_sphinx_theme
-sphinx==4.0.2
+sphinx
 sphinx-copybutton
 sphinx_markdown_tables
-sphinx_rtd_theme==0.5.2
-urllib3<2.0.0
+sphinx_rtd_theme
+urllib3
+sphinx-tabs
+sphinxcontrib-bibtex

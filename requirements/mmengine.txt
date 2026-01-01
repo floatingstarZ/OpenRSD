@@ -11,3 +11,9 @@ requests
 rich
 tqdm
 yapf
+mmcv
+mmengine
+terminaltables
+scipy
+shapely
+pycocotools

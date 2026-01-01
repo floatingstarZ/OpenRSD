@@ -1,5 +1,6 @@
 mmpretrain
 motmetrics
-numpy<1.24.0
 scikit-learn
 seaborn
+filterpy
+pyclustering
