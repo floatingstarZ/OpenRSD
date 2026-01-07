@@ -103,6 +103,12 @@ extra_files = [
 
     "./results/MMR_AD_A08_e_rtm_v2_base_recheck/epoch_36.pth",
     "./results/MMR_AD_A10_flex_rtm_v3_1_formal/epoch_24.pth",
+    "./results/MMR_AD_A10_flex_rtm_v3_1_formal_with_hbb/epoch_8.pth",
+    "./results/MMR_AD_A12_flex_rtm_v3_1_self_training_Labelver5/epoch_24.pth",
+    "./results/MMR_AD_A12_flex_rtm_v3_1_maid_self_training/epoch_24.pth",
+    "./results/MMR_AD_A10_flex_rtm_v3_1_formal_simple/epoch_7.pth",
+    "./results/MMR_AD_A13_Hin_rtm_v2_NearestMem/epoch_9.pth",
+    "./results/MMR_AD_A10_Gen_rtm_v3_0_pretrain_wo_slot/epoch_24.pth",
 ]
 
 support_files = [
