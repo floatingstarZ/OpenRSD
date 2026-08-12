@@ -551,6 +551,18 @@ python M_Tools/Data2_DIOR_R/Step5_3_Prepare_Visual_Text_DINOv2_support.py
 
 ## ❓ 常见问题
 
+### Q: SpaceNet、WHU-Mix 和自训练标签的缺失处理步骤在哪里？
+
+A: 请参阅 [`M_Tools/OpenRSD_Reproduction/README.md`](M_Tools/OpenRSD_Reproduction/README.md)。该目录提供：
+
+- Rio、Vegas、Paris、Shanghai、Khartoum 五城市 SpaceNet train/val 合并脚本；
+- 通用且无绝对路径的 `Step6_Format_labels` 实现；
+- WHU-Mix TIFF/PNG 分割 mask 到 DOTA 四点旋转框的转换脚本；
+- LabelVer5 自训练标签的阈值说明和可移植生成器（CLIP 阈值为 0.24）；
+- 多 GPU 启动脚本持续显示 `Wait` 时的原因和排查方式。
+
+最终实验实际使用 SpaceNet 五城市 val（3,308 张）以及 WHU-Mix val（2,922 张）评估；请以该复现说明和最终配置为准。
+
 ### Q: 如何选择配置文件？
 
 A: 根据您的训练阶段选择对应的配置文件：
