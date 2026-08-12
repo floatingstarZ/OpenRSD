@@ -74,6 +74,10 @@ def parse_args():
     parser.add_argument('-c', help='start cmd count', default=10)
     parser.add_argument('-r', default='det', help='设置runner')
     parser.add_argument('-d', default=None, help='devices id, 0~9')
+    parser.add_argument('--max-used-gb', type=float, default=0.5,
+                        help='GPU is idle when used memory is below this value')
+    parser.add_argument('--poll-seconds', type=float, default=3.0,
+                        help='seconds between GPU availability checks')
 
     args = parser.parse_args()
     return args
@@ -176,7 +180,9 @@ if __name__ == "__main__":
         task_used = task['used_gpu']
 
         # 可以使用的 和 已经使用的集合 的 并集
-        available_gpu_ids = get_available_gpu_ids(deviceCount, max_used=0.5)
+        gpu_infos = get_gpu_infos(deviceCount)
+        available_gpu_ids = [gpu_id for gpu_id, info in enumerate(gpu_infos)
+                             if info['used'] < args.max_used_gb]
         used_gpu_ids = np.arange(deviceCount)[np.array(list(used_gpu), dtype=np.bool_)].tolist()
         available_gpu_ids = list(set(available_gpu_ids) - set(used_gpu_ids))
         not_allowed_gpus = set(list(range(deviceCount))) - set(allowed_gpus)
@@ -186,8 +192,16 @@ if __name__ == "__main__":
         # 如果没有足够GPU可以使用，则继续检查
         if len(available_gpu_ids) < task_used or \
                 np.sum(np.array(list(used_gpu))) >= MAX_TASK:
-            print('Wait')
-            time.sleep(3)
+            allowed_status = ', '.join(
+                'GPU%d used=%.2fGiB%s' %
+                (gpu_id, gpu_infos[gpu_id]['used'],
+                 ' (reserved by launcher)' if gpu_id in used_gpu_ids else '')
+                for gpu_id in allowed_gpus)
+            print('Wait: pending task requires %d GPU(s), available=%s, '
+                  'idle threshold=%.2fGiB; %s' %
+                  (task_used, available_gpu_ids, args.max_used_gb,
+                   allowed_status), flush=True)
+            time.sleep(args.poll_seconds)
             continue
 
         # 设置GPU数量
@@ -200,7 +214,7 @@ if __name__ == "__main__":
         p_list.append(p)
         p_list[-1].start()
         # 等待一秒，让进程设置一下used_gpu
-        time.sleep(3)
+        time.sleep(args.poll_seconds)
 
 
         task_id += 1
@@ -210,5 +224,4 @@ if __name__ == "__main__":
     print('Done')
 
     nvmlShutdown()
-
 

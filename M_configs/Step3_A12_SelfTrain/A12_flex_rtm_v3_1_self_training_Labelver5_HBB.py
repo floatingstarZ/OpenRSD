@@ -65,7 +65,7 @@ test_dataloader = val_dataloader
 load_from = './results/MMR_AD_A12_flex_rtm_v3_1_self_training_Labelver5/epoch_24.pth'
 frozen_parameters = ['backbone']
 batch_size = 4
-data_root = '/gpfsdata/home/huangziyue/data'
+data_root = './data'
 
 
 max_epochs = 12
@@ -593,7 +593,6 @@ train_dataloader = dict(
             Data11_WHU_Mix_SelfLabel,
             Data12_ShipImageNet_SelfLabel,
         ]))
-
 
 
 
