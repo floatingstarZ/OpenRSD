@@ -106,7 +106,7 @@ python setup.py install
 所有数据集和模型权重可通过以下链接下载：
 
 通过网盘分享的文件：OpenRSD
-链接: https://pan.baidu.com/s/1QWWZOfrjAWhEbk1eQASXVQ?pwd=usnc 提取码: usnc 
+链接: https://pan.baidu.com/s/1sV3GHgneC3dQskIaYABefg?pwd=aan9 提取码: aan9
 --来自百度网盘超级会员v9的分享
 
 
@@ -562,6 +562,10 @@ A: 请参阅 [`M_Tools/OpenRSD_Reproduction/README.md`](M_Tools/OpenRSD_Reproduc
 - 多 GPU 启动脚本持续显示 `Wait` 时的原因和排查方式。
 
 最终实验实际使用 SpaceNet 五城市 val（3,308 张）以及 WHU-Mix val（2,922 张）评估；请以该复现说明和最终配置为准。
+
+### Q: FAIR1M 训练集只有 images，没有 label 怎么办？
+
+A: FAIR1M 的训练标注应位于 `FAIR1M_2_800_400/train/Step6_Format_labels` 对应的网盘目录。仓库里的 `BaiduPCS_Upload.py` 已修正为上传这份训练标注，而不是旧的 `FAIR1M_1024_0` 路径；`ss_val` 里的 `annfiles` 只用于验证集。
 
 ### Q: 如何选择配置文件？
 

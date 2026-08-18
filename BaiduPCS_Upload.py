@@ -404,7 +404,7 @@ dataset_anns = [
     './data/million_aid/Step8_Remain_HighResolutions',  # D0_MAID
     './data/DOTA2_800_600/train/Step6_Format_labels',  # D1_DOTA2
     './data/DIOR_R_dota/train_val/Step6_Format_labels',  # D2_DIOR_R
-    './data/FAIR1M_1024_0/train/Step6_Format_labels',  # D3_FAIR1M
+    './data/FAIR1M_2_800_400/train/Step6_Format_labels',  # D3_FAIR1M
     './data/HRRSD_800_0/train/Step6_Format_labels',  # D4_HRRSD
     './data/Spacenet_Merge/Step6_Format_labels',  # D5_SpaceNet
     './data/xView_800_600/Step6_Format_labels',  # D6_Xview
